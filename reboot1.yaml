@@ -1,0 +1,31 @@
+---
+- name: ESXi Reboot #vmcloud.pl
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    vcenter_server: 172.20.1.220
+    vcenter_username: "administrator@vsphere.local"
+    vcenter_password: "pw"
+    esxi_hostname: "ESXi_hostname"
+
+  tasks:
+    - name: ESXi reboot 
+      vmware_host_powerstate: 
+        hostname: "{{ vcenter_server }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        esxi_hostname: "{{ esxi_hostname }}"
+        validate_certs: no
+        timeout: 3600   #Timeout for the operation (sec)
+        state: reboot-host
+        force: true     #This is required to forcely reboot ESXi host when it is not in Maintenance Mode
+      register: reboot_host
+  
+    - name: ESXi wait for the reboot to complete
+      wait_for:
+        host: "{{ esxi_hostname }}"
+        port: 443
+        delay: 360        #Perform first check after delay (sec)
+        state: started
+        timeout: 3600     #Timeout for the operation (sec)
